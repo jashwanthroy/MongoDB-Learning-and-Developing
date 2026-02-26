@@ -3,6 +3,7 @@ const mongoose = require("mongoose")
 const asyncHandler = require("../middleware/asyncHandler");
 const CustomError = require("../utils/customError");
 
+// User Collection 
 exports.createUser = asyncHandler(async (req, res, next) => {
   const { name, email, age } = req.body;
   if (!name || !email) {
@@ -184,5 +185,98 @@ exports.getReqFields = asyncHandler(async (req,res,next) =>{
   res.status(200).json({
     status: "success",
     data: result
+  })
+})
+
+// $lookup users with their orders
+exports.getUsersWithOrders = asyncHandler(async (req,res,next) =>{
+  const data = await User.aggregate([
+    {
+      $lookup: {
+        from: "orders",
+        localField: "_id",
+        foreignField: "userId",
+        as: "orders"
+      }
+    }
+  ])
+  res.status(200).json({
+    status: "success",
+    data
+  })
+})
+
+// $addFields add orders with total price for user
+exports.getUsersTotalSpending = asyncHandler(async (req,res,next) =>{
+  const data = await User.aggregate([
+    {
+      $lookup:{
+        from : "orders",
+        localField: "_id",
+        foreignField: "userId",
+        as: "orders"
+      }
+    },
+    {
+      $addFields:{
+        totalSpent: { $sum: "$orders.price"}
+      }
+    }
+  ])
+  res.status(200).json({
+    status: "success",
+    data
+  })
+})
+
+//top 5 users by spending
+exports.getTopUsers = asyncHandler(async (req,res,next)=>{
+  const data = await User.aggregate([
+    {
+      $lookup:{
+        from: "orders",
+        localField: "_id",
+        foreignField: "userId",
+        as: "orders"
+      }
+    },
+    {
+      $addFields:{
+        totalSpent: { $sum: "$orders.price"}
+      }
+    },
+    {
+      $sort: { totalSpent: -1 }
+    },
+    {
+      $limit: 5
+    }
+  ])
+  res.status(200).json({
+    status: "success",
+    data
+  })
+})
+
+//orders per user
+exports.getOrderPerUser = asyncHandler(async (req,res,next)=>{
+  const data = await User.aggregate([
+    {
+      $lookup:{
+        from: "orders",
+        localField: "_id",
+        foreignField: "userId",
+        as: "orders"
+      }
+    },
+    {
+      $addFields:{
+        orderCount: { $size: "$orders"}
+      }
+    }
+  ])
+  res.status(200).json({
+    status: "success",
+    data
   })
 })
