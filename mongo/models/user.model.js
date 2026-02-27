@@ -13,6 +13,10 @@ const userSchema = new mongoose.Schema({
     age:{
         type: Number,
         min: 0
+    },
+    balance:{
+        type: Number,
+        default: 0
     }
 },{timestamps: true});
 userSchema.index({ email: 1},{unique: true})
