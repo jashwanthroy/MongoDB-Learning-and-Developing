@@ -1,9 +1,10 @@
 const User = require("../models/user.model");
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
 const asyncHandler = require("../middleware/asyncHandler");
 const CustomError = require("../utils/customError");
+const jwt = require("jsonwebtoken")
 
-// User Collection 
+// User Collection
 exports.createUser = asyncHandler(async (req, res, next) => {
   const { name, email, age } = req.body;
   if (!name || !email) {
@@ -78,205 +79,205 @@ exports.updateUserById = asyncHandler(async (req, res, next) => {
   });
 });
 
-
-exports.deleteUserById = asyncHandler(async (req,res,next) =>{
-    const {id} = req.params;
-    if(!mongoose.Types.ObjectId.isValid(id)){
-        return next(new CustomError("Invalid User Id format",400));
-    }
-    const user = await User.deleteUserById(id);
-    if(!user){
-        return next(new CustomError("User Not FOund",404))
-    }
-    res.status(200).json({
-        status: "success",
-        message: "User Deleted Sucessfully"
-    })
-})
+exports.deleteUserById = asyncHandler(async (req, res, next) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return next(new CustomError("Invalid User Id format", 400));
+  }
+  const user = await User.deleteUserById(id);
+  if (!user) {
+    return next(new CustomError("User Not FOund", 404));
+  }
+  res.status(200).json({
+    status: "success",
+    message: "User Deleted Sucessfully",
+  });
+});
 
 //Aggregation
 //total users
-exports.getUserCount = asyncHandler(async (req,res,next) =>{
-    const result = await User.aggregate([
-      {
-        $group:{
-          _id: null,
-          totalUsers: { $sum : 1}
-        }
-      }
-    ])
-    res.status(200).json({
-      status: "success",
-      data: result
-    })
-})
-
-//group users by age
-exports.getUsersByAge = asyncHandler(async (req,res,next) =>{
+exports.getUserCount = asyncHandler(async (req, res, next) => {
   const result = await User.aggregate([
     {
-      $group:{
-        _id: "$age",
-        count: { $sum: 1}
-      }
+      $group: {
+        _id: null,
+        totalUsers: { $sum: 1 },
+      },
     },
-    {
-      $sort: {_id: 1}
-    }
-  ])
+  ]);
   res.status(200).json({
     status: "success",
-    data: result
-  })
-})
+    data: result,
+  });
+});
+
+//group users by age
+exports.getUsersByAge = asyncHandler(async (req, res, next) => {
+  const result = await User.aggregate([
+    {
+      $group: {
+        _id: "$age",
+        count: { $sum: 1 },
+      },
+    },
+    {
+      $sort: { _id: 1 },
+    },
+  ]);
+  res.status(200).json({
+    status: "success",
+    data: result,
+  });
+});
 
 //grouping users above age 20
-exports.getUsersAboveAge = asyncHandler(async (req,res,next) =>{
+exports.getUsersAboveAge = asyncHandler(async (req, res, next) => {
   const minAge = parseInt(req.query.age) || 20;
   const result = await User.aggregate([
     {
-      $match: { age: { $gt: minAge}}
+      $match: { age: { $gt: minAge } },
     },
     {
-      $group:{
+      $group: {
         _id: "$age",
-        count: { $sum : 1}
-      }
+        count: { $sum: 1 },
+      },
     },
     {
-      $sort: { _id: 1 }
-    }
-  ])
+      $sort: { _id: 1 },
+    },
+  ]);
   res.status(200).json({
     status: "success",
-    data: result
-  })
-})
+    data: result,
+  });
+});
 
 //Average age of Users
-exports.getAvgAge = asyncHandler(async (req,res,next) =>{
+exports.getAvgAge = asyncHandler(async (req, res, next) => {
   const result = await User.aggregate([
     {
       $group: {
         _id: null,
         averageAge: {
-          $avg: "$age"
-        }
-      }
-    }
-  ])
+          $avg: "$age",
+        },
+      },
+    },
+  ]);
   res.status(200).json({
     status: "success",
-    data: result
-  })
-})
+    data: result,
+  });
+});
 //retriving required fields
-exports.getReqFields = asyncHandler(async (req,res,next) =>{
+exports.getReqFields = asyncHandler(async (req, res, next) => {
   const result = await User.aggregate([
     {
       $project: {
         name: 1,
         age: 1,
-        _id: 0
+        _id: 0,
         // dob: 0
-      }
-    }
-  ])
+      },
+    },
+  ]);
   res.status(200).json({
     status: "success",
-    data: result
-  })
-})
+    data: result,
+  });
+});
 
 // $lookup users with their orders
-exports.getUsersWithOrders = asyncHandler(async (req,res,next) =>{
+exports.getUsersWithOrders = asyncHandler(async (req, res, next) => {
   const data = await User.aggregate([
     {
       $lookup: {
         from: "orders",
         localField: "_id",
         foreignField: "userId",
-        as: "orders"
-      }
-    }
-  ])
+        as: "orders",
+      },
+    },
+  ]);
   res.status(200).json({
     status: "success",
-    data
-  })
-})
+    data,
+  });
+});
 
 // $addFields add orders with total price for user
-exports.getUsersTotalSpending = asyncHandler(async (req,res,next) =>{
+exports.getUsersTotalSpending = asyncHandler(async (req, res, next) => {
   const data = await User.aggregate([
     {
-      $lookup:{
-        from : "orders",
+      $lookup: {
+        from: "orders",
         localField: "_id",
         foreignField: "userId",
-        as: "orders"
-      }
+        as: "orders",
+      },
     },
     {
-      $addFields:{
-        totalSpent: { $sum: "$orders.price"}
-      }
-    }
-  ])
+      $addFields: {
+        totalSpent: { $sum: "$orders.price" },
+      },
+    },
+  ]);
   res.status(200).json({
     status: "success",
-    data
-  })
-})
+    data,
+  });
+});
 
 //top 5 users by spending
-exports.getTopUsers = asyncHandler(async (req,res,next)=>{
+exports.getTopUsers = asyncHandler(async (req, res, next) => {
   const data = await User.aggregate([
     {
-      $lookup:{
+      $lookup: {
         from: "orders",
         localField: "_id",
         foreignField: "userId",
-        as: "orders"
-      }
+        as: "orders",
+      },
     },
     {
-      $addFields:{
-        totalSpent: { $sum: "$orders.price"}
-      }
+      $addFields: {
+        totalSpent: { $sum: "$orders.price" },
+      },
     },
     {
-      $sort: { totalSpent: -1 }
+      $sort: { totalSpent: -1 },
     },
     {
-      $limit: 5
-    }
-  ])
+      $limit: 5,
+    },
+  ]);
   res.status(200).json({
     status: "success",
-    data
-  })
-})
+    data,
+  });
+});
 
 //orders per user
-exports.getOrderPerUser = asyncHandler(async (req,res,next)=>{
+exports.getOrderPerUser = asyncHandler(async (req, res, next) => {
   const data = await User.aggregate([
     {
-      $lookup:{
+      $lookup: {
         from: "orders",
         localField: "_id",
         foreignField: "userId",
-        as: "orders"
-      }
+        as: "orders",
+      },
     },
     {
-      $addFields:{
-        orderCount: { $size: "$orders"}
-      }
-    }
-  ])
+      $addFields: {
+        orderCount: { $size: "$orders" },
+      },
+    },
+  ]);
   res.status(200).json({
     status: "success",
-    data
-  })
-})
+    data,
+  });
+});
+
