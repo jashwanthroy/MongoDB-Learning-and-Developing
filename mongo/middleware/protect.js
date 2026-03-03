@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken")
 const User = require("../models/user.model")
 const asyncHandler = require("../middleware/asyncHandler")
 const CustomError = require("../utils/customError")
-exports.protect = asyncHandler(async (req, res, next) => {
+exports.protect = asyncHandler(async (req, res,next) => {
   let token;
 
   if (
@@ -16,7 +16,7 @@ exports.protect = asyncHandler(async (req, res, next) => {
     throw new CustomError("Not Authorized", 401);
   }
 
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  const decoded = jwt.verify(token, "accesssec123#");
   req.user = await User.findById(decoded.id);
 
   next();

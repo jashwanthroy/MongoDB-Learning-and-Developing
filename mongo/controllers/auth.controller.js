@@ -8,7 +8,7 @@ const asyncHandler = require("../middleware/asyncHandler")
 
 exports.register = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
-
+  console.log(typeof asyncHandler)
   const user = await User.create({
     name,
     email,
@@ -33,13 +33,25 @@ exports.login = asyncHandler(async(req,res)=>{
     throw new Error("Not Authorized");
     // throw new CustomError("Invalid Credentials",404);
   }
-  const token = jwt.sign(
-    {id: user._id},
-    process.env.JWT_SECRET,
-    {expiresIn: "1h"}
-  )
 
+  // const token = jwt.sign(
+  //   {id: user._id},
+  //   "jaswanth2912#",
+  //   {expiresIn: "1h"}
+  // )
+  const accessToken = jwt.sign(
+    {id: user._id},
+    "accesssec123#",
+    {expiresIn: "10m"}
+  )
+  const refreshToken = jwt.sign(
+    {id: user._id},
+    "refressec123#",
+    { expiresIn: "7d"}
+  )
   res.status(200).json({
-    token
+    status: "success",
+    accessToken,
+    refreshToken
   })
 })

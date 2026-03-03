@@ -6,8 +6,6 @@ const orderRoutes = require("../mongo/routes/order.routes")
 const authRoutes = require("../mongo/routes/auth.routes")
 const errorMiddleware = require("../mongo/middleware/error.middleware")
 
-
-
 app.use((req,res,next)=>{
     console.log("request reached Express",req.method,req.url);
     next()
