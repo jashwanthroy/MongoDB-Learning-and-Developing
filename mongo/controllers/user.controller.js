@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const asyncHandler = require("../middleware/asyncHandler");
 const CustomError = require("../utils/customError");
 const jwt = require("jsonwebtoken")
+const {redisClient} = require("../config/redis")
 
 // User Collection
 exports.createUser = asyncHandler(async (req, res, next) => {
@@ -24,30 +25,47 @@ exports.createUser = asyncHandler(async (req, res, next) => {
 });
 
 exports.getUsers = asyncHandler(async (req, res, next) => {
-  const queryObj = { ...req.query };
+  // const queryObj = { ...req.query };
 
-  const excludeFields = ["page", "limit", "select"];
-  excludeFields.forEach((el) => delete queryObj[el]);
+  // const excludeFields = ["page", "limit", "select"];
+  // excludeFields.forEach((el) => delete queryObj[el]);
 
-  let query = User.find(queryObj);
+  // let query = User.find(queryObj);
 
-  if (req.query.select) {
-    const fields = req.query.select.split(",").join(" ");
-    query = query.select(fields);
-  }
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const skip = (page - 1) * limit;
+  // if (req.query.select) {
+  //   const fields = req.query.select.split(",").join(" ");
+  //   query = query.select(fields);
+  // }
+  // const page = parseInt(req.query.page) || 1;
+  // const limit = parseInt(req.query.limit) || 10;
+  // const skip = (page - 1) * limit;
 
-  query = query.skip(skip).limit(limit);
+  // query = query.skip(skip).limit(limit);
 
   // const users = await User.find();
-  const users = await query;
-  res.status(200).json({
-    status: "success",
-    results: users.length,
-    data: users,
-  });
+  // // const users = await query;
+  // res.status(200).json({
+  //   status: "success",
+  //   results: users.length,
+  //   data: users,
+  // });
+  const cache = await redisClient.get("users");
+      if(cache){
+          return res.json({
+              source: "cache",
+              data: JSON.parse(cache)
+          })
+      }
+      const users = await User.find();
+      await redisClient.set(
+          "users",
+          JSON.stringify(users),
+          { EX: 60}
+      )
+      res.json({
+          source: "database",
+          data: users
+      })
 });
 
 exports.getUserById = asyncHandler(async (req, res, next) => {

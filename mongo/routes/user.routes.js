@@ -4,9 +4,7 @@ const {createUser, getUsers,getUserById,updateUserById,deleteUserById,getUserCou
 
 router.post("/",createUser);
 router.get("/",getUsers);
-router.get("/:id",getUserById);
-router.patch("/:id",updateUserById)
-router.delete("/:id",deleteUserById)
+
 //Aggregation
 router.get("/stats/count",getUserCount)
 router.get("/stats/byage",getUsersByAge)
@@ -18,4 +16,9 @@ router.get("/stats/getorders",getUsersWithOrders)
 router.get("/stats/totalspent",getUsersTotalSpending)
 router.get("/stats/topusers",getTopUsers)
 router.get("/stats/orderperuser",getOrderPerUser)
+
+router.get("/:id",getUserById);
+router.patch("/:id",updateUserById)
+router.delete("/:id",deleteUserById)
+
 module.exports = router;
