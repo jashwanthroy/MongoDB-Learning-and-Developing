@@ -1,7 +1,7 @@
 const {createClient} = require("redis")
 
 const redisClient = createClient({
-    url: "use custom url"
+    url: "use your own client url"
 })
 
 redisClient.on("connect",()=>{

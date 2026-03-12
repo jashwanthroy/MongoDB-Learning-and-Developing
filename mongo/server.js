@@ -3,7 +3,7 @@ const app = require("./app")
 const { connectRedis } = require("./config/redis")
 
 
-mongoose.connect("Use your own connection string").then(()=>{
+mongoose.connect("Use Your own connection string").then(()=>{
     console.log("Connected to MongoDB");
     connectRedis();
     app.listen(3001,()=>{

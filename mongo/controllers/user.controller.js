@@ -7,17 +7,19 @@ const {redisClient} = require("../config/redis")
 
 // User Collection
 exports.createUser = asyncHandler(async (req, res, next) => {
-  const { name, email, age } = req.body;
-  if (!name || !email) {
-    return next(new CustomError("Name and Email are required", 400));
+  const { name, email,password,age } = req.body;
+  if (!name || !email || !password) {
+    return next(new CustomError("Name and Email, Password are required", 400));
   }
 
   const user = await User.create({
     name,
     email,
-    age,
+    password,
+    age
   });
-
+  //cache invalidation Implementation
+  await redisClient.del("users")
   res.status(201).json({
     status: "success",
     data: user,
@@ -91,6 +93,7 @@ exports.updateUserById = asyncHandler(async (req, res, next) => {
   if (!user) {
     return next(new CustomError("User Not Found", 404));
   }
+  await redisClient.del("users")
   res.status(200).json({
     status: "success",
     data: user,
@@ -102,10 +105,11 @@ exports.deleteUserById = asyncHandler(async (req, res, next) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return next(new CustomError("Invalid User Id format", 400));
   }
-  const user = await User.deleteUserById(id);
+  const user = await User.findByIdAndDelete(id);
   if (!user) {
     return next(new CustomError("User Not FOund", 404));
   }
+  await redisClient.del("users")
   res.status(200).json({
     status: "success",
     message: "User Deleted Sucessfully",
