@@ -4,22 +4,24 @@ const asyncHandler = require("../middleware/asyncHandler");
 const CustomError = require("../utils/customError");
 const jwt = require("jsonwebtoken")
 const {redisClient} = require("../config/redis")
+const userService = require("../services/user.service")
 
 // User Collection
 exports.createUser = asyncHandler(async (req, res, next) => {
-  const { name, email,password,age } = req.body;
-  if (!name || !email || !password) {
-    return next(new CustomError("Name and Email, Password are required", 400));
-  }
+  // const { name, email,password,age } = req.body;
+  // if (!name || !email || !password) {
+  //   return next(new CustomError("Name and Email, Password are required", 400));
+  // }
 
-  const user = await User.create({
-    name,
-    email,
-    password,
-    age
-  });
-  //cache invalidation Implementation
-  await redisClient.del("users")
+  // const user = await User.create({
+  //   name,
+  //   email,
+  //   password,
+  //   age
+  // });
+  // //cache invalidation Implementation
+  // await redisClient.del("users")
+  const user = await userService.createUser(req.body)
   res.status(201).json({
     status: "success",
     data: user,
@@ -51,23 +53,28 @@ exports.getUsers = asyncHandler(async (req, res, next) => {
   //   results: users.length,
   //   data: users,
   // });
-  const cache = await redisClient.get("users");
-      if(cache){
-          return res.json({
-              source: "cache",
-              data: JSON.parse(cache)
-          })
-      }
-      const users = await User.find();
-      await redisClient.set(
-          "users",
-          JSON.stringify(users),
-          { EX: 60}
-      )
-      res.json({
-          source: "database",
-          data: users
-      })
+  // const cache = await redisClient.get("users");
+  //     if(cache){
+  //         return res.json({
+  //             source: "cache",
+  //             data: JSON.parse(cache)
+  //         })
+  //     }
+  //     const users = await User.find();
+  //     await redisClient.set(
+  //         "users",
+  //         JSON.stringify(users),
+  //         { EX: 60}
+  //     )
+  //     res.json({
+  //         source: "database",
+  //         data: users
+  //     })
+  const users = await userService.getUsers();
+  res.json({
+    status:"success",
+    data: users
+  })
 });
 
 exports.getUserById = asyncHandler(async (req, res, next) => {
