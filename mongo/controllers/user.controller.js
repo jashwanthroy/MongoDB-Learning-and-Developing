@@ -40,10 +40,10 @@ exports.getUsers = asyncHandler(async (req, res, next) => {
   //   const fields = req.query.select.split(",").join(" ");
   //   query = query.select(fields);
   // }
-  // const page = parseInt(req.query.page) || 1;
-  // const limit = parseInt(req.query.limit) || 10;
-  // const skip = (page - 1) * limit;
-
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+  const users = await User.find().skip(skip).limit(limit).lean();
   // query = query.skip(skip).limit(limit);
 
   // const users = await User.find();
@@ -70,9 +70,11 @@ exports.getUsers = asyncHandler(async (req, res, next) => {
   //         source: "database",
   //         data: users
   //     })
-  const users = await userService.getUsers();
+  // const users = await userService.getUsers();
   res.json({
     status:"success",
+    page,
+    results: users.length,
     data: users
   })
 });
@@ -310,3 +312,26 @@ exports.getOrderPerUser = asyncHandler(async (req, res, next) => {
   });
 });
 
+exports.searchUser = asyncHandler(async(req,res)=>{
+  const {email} = req.query;
+  if(!email){
+    return res.status(400).json({
+      message:"Email Required"
+    })
+  }
+  const user = await User.findOne({email}).select("_id name email").lean();
+  res.json({
+    data: user
+  })
+})
+//cursor pagination
+exports.getUsersCursor = asyncHandler(async(req,res)=>{
+  const {cursor} = req.query;
+  const limit = 10;
+  const query = cursor ? { _id: {$gt: cursor}} : {};
+  const users = await User.find(query).sort({_id: 1}).limit(limit).lean();
+  res.json({
+    status:"success",
+    data: users
+  })
+})
