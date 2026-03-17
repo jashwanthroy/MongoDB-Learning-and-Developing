@@ -8,20 +8,22 @@ const userService = require("../services/user.service")
 
 // User Collection
 exports.createUser = asyncHandler(async (req, res, next) => {
-  // const { name, email,password,age } = req.body;
-  // if (!name || !email || !password) {
-  //   return next(new CustomError("Name and Email, Password are required", 400));
-  // }
+  const { name, email,password,age,balance } = req.body; 
+  console.log(req.body)
+  if (!name || !email || !password) {
+    return next(new CustomError("Name and Email, Password are required", 400));
+  }
 
-  // const user = await User.create({
-  //   name,
-  //   email,
-  //   password,
-  //   age
-  // });
-  // //cache invalidation Implementation
-  // await redisClient.del("users")
-  const user = await userService.createUser(req.body)
+  const user = await User.create({
+    name,
+    email,
+    password,
+    age,
+    balance
+  });
+  //cache invalidation Implementation
+  await redisClient.del("users")
+  // const user = await userService.createUser(req.body)
   res.status(201).json({
     status: "success",
     data: user,
@@ -334,4 +336,48 @@ exports.getUsersCursor = asyncHandler(async(req,res)=>{
     status:"success",
     data: users
   })
+})
+
+//Transactions
+exports.transferMoney = asyncHandler(async(req,res,next)=>{
+  const{ fromUId, toUId, amount } = req.body;
+  //starting the sesstion
+  const session = await  mongoose.startSession();
+  try{
+    //start transaction
+    session.startTransaction();
+
+    //fetching the users
+    const fromuser = await User.findById(fromUId).session(session);
+    const touser = await User.findById(toUId).session(session);
+    //invalid conditions
+    if(!fromuser || !touser){
+      throw new Error("User Not Found");
+    }
+    if(fromuser.balance < amount){
+      throw new Error("Insufficient Balance")
+    }
+    //debit sender
+    fromuser.balance -= amount;
+    await fromuser.save({ session })
+    //credit receiver
+    touser.balance += amount;
+    await touser.save({ session })
+
+    await session.commitTransaction();
+
+    res.json({
+      message: "Transaction Success!!!"
+    })
+
+  }catch(error){
+
+    //rollback if any error
+    await session.abortTransaction();
+    res.status(400).json({
+      message: error.message
+    })
+  }finally{
+    session.endSession();
+  }
 })

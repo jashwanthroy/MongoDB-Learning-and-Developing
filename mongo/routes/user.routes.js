@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const {createUser, getUsers,getUserById,updateUserById,deleteUserById,getUserCount,getUsersByAge,getUsersAboveAge,getAvgAge,getReqFields,getUsersWithOrders,getUsersTotalSpending,getTopUsers,getOrderPerUser, searchUser, getUsersCursor} = require("../controllers/user.controller")
+const {createUser, getUsers,getUserById,updateUserById,deleteUserById,getUserCount,getUsersByAge,getUsersAboveAge,getAvgAge,getReqFields,getUsersWithOrders,getUsersTotalSpending,getTopUsers,getOrderPerUser, searchUser, getUsersCursor, transferMoney} = require("../controllers/user.controller")
 
 // console.log("User routes loaded")
 

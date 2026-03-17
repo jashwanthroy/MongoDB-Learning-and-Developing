@@ -4,6 +4,7 @@ const app = express()
 const userRoutes = require("../mongo/routes/user.routes")
 const orderRoutes = require("../mongo/routes/order.routes")
 const authRoutes = require("../mongo/routes/auth.routes")
+const transactionRoutes = require("../mongo/routes/transaction.routes")
 const errorMiddleware = require("../mongo/middleware/error.middleware")
 const { apiLimiter } = require("./middleware/rateLimiter")
 // const mongoSanitize = require("express-mongo-sanitize")
@@ -24,6 +25,8 @@ app.use("/api",apiLimiter)
 app.use("/api/users",userRoutes)
 app.use("/api/orders",orderRoutes)
 app.use("/api/auth",authRoutes)
+app.use("/api/transactions",transactionRoutes)
+
 app.use(errorMiddleware)
 
 module.exports = app;
