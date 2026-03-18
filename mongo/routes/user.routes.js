@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const {createUser, getUsers,getUserById,updateUserById,deleteUserById,getUserCount,getUsersByAge,getUsersAboveAge,getAvgAge,getReqFields,getUsersWithOrders,getUsersTotalSpending,getTopUsers,getOrderPerUser, searchUser, getUsersCursor, transferMoney} = require("../controllers/user.controller")
+const {createUser, getUsers,getUserById,updateUserById,deleteUserById,getUserCount,getUsersByAge,getUsersAboveAge,getAvgAge,getReqFields,getUsersWithOrders,getUsersTotalSpending,getTopUsers,getOrderPerUser, searchUser, getUsersCursor, transferMoney} = require("../controllers/user.controller");
+const { sendEmail } = require("../controllers/email.controller");
 
 // console.log("User routes loaded")
 
@@ -24,6 +25,6 @@ router.get("/cursor",getUsersCursor)
 router.get("/:id",getUserById);
 router.patch("/:id",updateUserById)
 router.delete("/:id",deleteUserById)
-
+router.post("/send-email",sendEmail)
 
 module.exports = router;
